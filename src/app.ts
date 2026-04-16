@@ -3,6 +3,7 @@ import cors from "@fastify/cors";
 import jwt from "@fastify/jwt";
 import { authRoutes } from "./modules/auth/auth.route";
 import bcrypt from "bcrypt";
+import { userRoutes } from "./modules/users/users.route";
 
 export const buildApp = () => {
   const app = Fastify({
@@ -19,6 +20,7 @@ export const buildApp = () => {
   });
 
   app.register(authRoutes)
+  app.register(userRoutes)
 
   app.get("/health", async () => {
     return { status: "ok" };
