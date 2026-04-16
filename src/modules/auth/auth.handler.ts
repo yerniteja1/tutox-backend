@@ -76,8 +76,7 @@ export const selectInstitutionHandler = async (
 ) => {
   const { institutionId } = req.body;
 
-  // @ts-ignore
-  const user = req.user;
+  const user = req.user as { userId: string };
 
   // 1. Check mapping
   const mappings = await db

@@ -1,37 +1,34 @@
 ### Variables
 @hostname = localhost
-@port = 3000
+@port = 5000
 @host = http://{{hostname}}:{{port}}
 @contentType = application/json
 
 ### 1. Ping Check
-# Verify the server is alive
 GET {{host}}/health
 
 ### 2. Login
-# This sends the credentials to your login route
 # @name login
 POST {{host}}/api/auth/login
 Content-Type: {{contentType}}
 
 {
-  "mobileNo": "9999999999",
+  "mobileNo": "9888888888",
   "password": "123456"
 }
 
-### 3. Get Institutions (Protected Route)
-# This uses the token from the login response above
-# Note: If your client doesn't support variables, manually copy the token after 'Bearer'
-@token = {{login.response.body.token}}
-
-POST {{host}}/select-institution
-Authorization: Bearer {{token}}
+### 3. Select Institution
+# Fixed URL to match your app.post route
+# @name selection
+POST {{host}}/api/auth/select-institution
+Authorization: Bearer {{login.response.body.token}}
 Content-Type: {{contentType}}
 
 {
-  "institutionId": 123
+  "institutionId": "df832fc6-999c-4b73-ac1e-ab5ba4e56cd7"
 }
 
+### 4. Get Data (Use the NEW token from the selection response)
 GET {{host}}/api/institutions
-Authorization: Bearer {{token}}
+Authorization: Bearer {{selection.response.body.token}}
 Content-Type: {{contentType}}
