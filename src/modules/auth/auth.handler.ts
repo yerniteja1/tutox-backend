@@ -1,7 +1,7 @@
 import { FastifyReply, FastifyRequest } from "fastify";
 import { db } from "../../db";
 import { institution, userInstMap, userLogin } from "../../db/schema";
-import { eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 import bcrypt from "bcrypt";
 
 type LoginBody = {
@@ -68,4 +68,52 @@ export const loginHandler = async (
   } catch (err) {
     console.log(err);
   }
+};
+
+export const selectInstitutionHandler = async (
+  req: FastifyRequest<{ Body: { institutionId: string } }>,
+  reply: FastifyReply
+) => {
+  const { institutionId } = req.body;
+
+  // @ts-ignore
+  const user:userLogin = req.user;
+
+  // 1. Check mapping
+  const mappings = await db
+    .select()
+    .from(userInstMap)
+    .where(
+      and(
+        eq(userInstMap.userId, user.userId),
+        eq(userInstMap.institutionId, institutionId)
+      )
+    );
+
+  const mapping = mappings[0];
+
+  if (!mapping) {
+    return reply.status(403).send({ message: "Access denied" });
+  }
+
+  // 2. Get institution
+  const instRes = await db
+    .select()
+    .from(institution)
+    .where(eq(institution.id, institutionId));
+
+  const inst = instRes[0];
+
+  // 3. Create new token (WITH institution)
+  const token = await reply.jwtSign({
+    userId: user.userId,
+    institutionId: institutionId,
+    role: mapping.role,
+  });
+
+  // 4. Return response
+  return reply.send({
+    token,
+    institution: inst,
+  });
 };

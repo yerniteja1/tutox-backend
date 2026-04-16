@@ -24,6 +24,14 @@ Content-Type: {{contentType}}
 # Note: If your client doesn't support variables, manually copy the token after 'Bearer'
 @token = {{login.response.body.token}}
 
-GET {{host}}/api/v1/institutions
+POST {{host}}/select-institution
+Authorization: Bearer {{token}}
+Content-Type: {{contentType}}
+
+{
+  "institutionId": 123
+}
+
+GET {{host}}/api/institutions
 Authorization: Bearer {{token}}
 Content-Type: {{contentType}}
