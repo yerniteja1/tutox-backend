@@ -1,0 +1,29 @@
+### Variables
+@hostname = localhost
+@port = 3000
+@host = http://{{hostname}}:{{port}}
+@contentType = application/json
+
+### 1. Ping Check
+# Verify the server is alive
+GET {{host}}/health
+
+### 2. Login
+# This sends the credentials to your login route
+# @name login
+POST {{host}}/api/auth/login
+Content-Type: {{contentType}}
+
+{
+  "mobileNo": "9999999999",
+  "password": "123456"
+}
+
+### 3. Get Institutions (Protected Route)
+# This uses the token from the login response above
+# Note: If your client doesn't support variables, manually copy the token after 'Bearer'
+@token = {{login.response.body.token}}
+
+GET {{host}}/api/v1/institutions
+Authorization: Bearer {{token}}
+Content-Type: {{contentType}}

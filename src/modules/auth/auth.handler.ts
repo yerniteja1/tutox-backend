@@ -1,0 +1,71 @@
+import { FastifyReply, FastifyRequest } from "fastify";
+import { db } from "../../db";
+import { institution, userInstMap, userLogin } from "../../db/schema";
+import { eq } from "drizzle-orm";
+import bcrypt from "bcrypt";
+
+type LoginBody = {
+  mobileNo: string;
+  password: string;
+  rememberMe: boolean;
+};
+export const loginHandler = async (
+  req: FastifyRequest<{ Body: LoginBody }>,
+  reply: FastifyReply,
+) => {
+  try {
+    const { mobileNo, password } = req.body;
+    // 1. Find user
+    const users = await db
+      .select()
+      .from(userLogin)
+      .where(eq(userLogin.mobileNo, mobileNo));
+    const user = users[0];
+
+    if (!user) {
+      return reply.status(401).send({ message: "Invalid credentials" });
+    }
+
+    // 2. Check password
+    const isMatch = await bcrypt.compare(password, user.passwordHash);
+    if (!isMatch) {
+      return reply.status(401).send({ message: "Invalid credentials" });
+    }
+
+    // 3. Get institutions
+    const mappings = await db
+      .select({
+        institutionId: userInstMap.institutionId,
+        name: institution.name,
+        address: institution.address,
+      })
+      .from(userInstMap)
+      .leftJoin(institution, eq(userInstMap.institutionId, institution.id))
+      .where(eq(userInstMap.userId, user.id));
+
+    const institutions = mappings.map((m) => {
+      id: m.institutionId;
+      name: m.name;
+      address: m.address;
+    });
+
+    // 4. Create Token
+    const token = await reply.jwtSign({
+      userId: user.id,
+      mobileNo: user.mobileNo,
+    });
+
+    // 5. Response
+    return reply.send({
+      token,
+      user: {
+        id: user.id,
+        name: user.name,
+        mobileNo: user.mobileNo,
+      },
+      institutions,
+    });
+  } catch (err) {
+    console.log(err);
+  }
+};
