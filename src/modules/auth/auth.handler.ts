@@ -38,16 +38,18 @@ export const loginHandler = async (
         institutionId: userInstMap.institutionId,
         name: institution.name,
         address: institution.address,
+        code: institution.code,
       })
       .from(userInstMap)
       .leftJoin(institution, eq(userInstMap.institutionId, institution.id))
       .where(eq(userInstMap.userId, user.id));
 
-    const institutions = mappings.map((m) => {
-      id: m.institutionId;
-      name: m.name;
-      address: m.address;
-    });
+    const institutions = mappings.map((m) => ({
+      id: m.institutionId,
+      name: m.name,
+      address: m.address,
+      code: m.code,
+    }));
 
     // 4. Create Token
     const token = await reply.jwtSign({
