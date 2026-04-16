@@ -77,7 +77,7 @@ export const selectInstitutionHandler = async (
   const { institutionId } = req.body;
 
   // @ts-ignore
-  const user:userLogin = req.user;
+  const user = req.user;
 
   // 1. Check mapping
   const mappings = await db
@@ -115,5 +115,52 @@ export const selectInstitutionHandler = async (
   return reply.send({
     token,
     institution: inst,
+  });
+};
+
+export const meHandler = async (req: any, reply: FastifyReply) => {
+  const { userId, institutionId } = req.user;
+
+  if (!institutionId) {
+    return reply.status(400).send({ message: "Institution not selected" });
+  }
+
+  // 1. Get user
+  const userRes = await db
+    .select()
+    .from(userLogin)
+    .where(eq(userLogin.id, userId));
+
+  const user = userRes[0];
+
+  // 2. Get institution
+  const instRes = await db
+    .select()
+    .from(institution)
+    .where(eq(institution.id, institutionId));
+
+  const inst = instRes[0];
+
+  // 3. Get role from mapping
+  const mapRes = await db
+    .select()
+    .from(userInstMap)
+    .where(
+      and(
+        eq(userInstMap.userId, userId),
+        eq(userInstMap.institutionId, institutionId)
+      )
+    );
+
+  const mapping = mapRes[0];
+
+  return reply.send({
+    user: {
+      id: user.id,
+      name: user.name,
+      mobileNo: user.mobileNo,
+    },
+    institution: inst,
+    role: mapping?.role,
   });
 };
