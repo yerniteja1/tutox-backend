@@ -4,7 +4,6 @@ import {
   getUserHandler,
   createUserHandler,
   updateUserHandler,
-  deleteUserHandler,
 } from "./users.handler";
 import { authenticate } from "../../middleware/authenticate";
 
@@ -17,5 +16,4 @@ export async function userRoutes(app: FastifyInstance) {
 
   app.patch("/api/users/:id", { preHandler: [authenticate] }, updateUserHandler);
 
-  app.delete("/api/users/:id", { preHandler: [authenticate] }, deleteUserHandler);
 }
